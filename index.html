@@ -1231,8 +1231,10 @@ function toast(msg, type='default') {
 
 // ==================== Init ====================
 async function init() {
-  loadDB();
-  await loadFoods();
+  try {
+    loadDB();
+    await loadFoods();
+  } catch(e) { console.error('Init error:', e); }
 
   if (!DB.profile) {
     document.getElementById('onboarding').classList.remove('hidden');
@@ -1240,9 +1242,11 @@ async function init() {
     document.getElementById('onboarding').classList.add('hidden');
   }
 
-  initCalendar();
-  refreshUI();
-  renderCalendar();
+  try {
+    initCalendar();
+    refreshUI();
+    renderCalendar();
+  } catch(e) { console.error('Render error:', e); alert('页面加载出错: ' + e.message); }
 }
 
 init();

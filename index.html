@@ -817,13 +817,20 @@ function saveProfile() {
 
 // ==================== Navigation ====================
 function switchTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  if (tab === 'stats') renderStats();
-  if (tab === 'calendar') renderCalendar();
-  if (tab === 'profile') renderProfile();
+  try {
+    document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+    var onclickAttr = "switchTab('" + tab + "')";
+    document.querySelectorAll('.nav-item').forEach(function(el){
+      var attr = el.getAttribute ? el.getAttribute('onclick') : '';
+      if (attr && attr.indexOf(onclickAttr) !== -1) { el.classList.add('active'); }
+    });
+    if (tab === 'stats') renderStats();
+    if (tab === 'calendar') renderCalendar();
+    if (tab === 'profile') renderProfile();
+    if (tab === 'home') refreshUI();
+  } catch(e) { console.error('switchTab error:', e); }
 }
 
 // ==================== Meal Check-in State ====================

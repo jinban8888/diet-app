@@ -789,23 +789,30 @@ function analyzeFoodKeyword(text) {
 
 // ==================== Onboarding ====================
 function saveProfile() {
-  const nickname = document.getElementById('inp-nickname').value.trim();
-  const gender = document.getElementById('inp-gender').value;
-  const age = parseInt(document.getElementById('inp-age').value);
-  const height = parseInt(document.getElementById('inp-height').value);
-  const weight = parseFloat(document.getElementById('inp-weight').value);
-  const goal = document.getElementById('inp-goal').value;
-  const activity = document.getElementById('inp-activity').value;
+  try {
+    const nickname = document.getElementById('inp-nickname').value.trim();
+    const gender = document.getElementById('inp-gender').value;
+    const age = parseInt(document.getElementById('inp-age').value);
+    const height = parseInt(document.getElementById('inp-height').value);
+    const weight = parseFloat(document.getElementById('inp-weight').value);
+    const goal = document.getElementById('inp-goal').value;
+    const activity = document.getElementById('inp-activity').value;
 
-  if (!nickname || !age || !height || !weight) { toast('请填写完整信息', 'danger'); return; }
-  if (height < 100 || height > 250 || weight < 30 || weight > 200) { toast('身高体重数据不合理', 'danger'); return; }
+    if (!nickname || !age || !height || !weight) { toast('请填写完整信息', 'danger'); return; }
+    if (height < 100 || height > 250 || weight < 30 || weight > 200) { toast('身高体重数据不合理', 'danger'); return; }
 
-  DB.profile = { nickname, gender, age, height, weight, goal, activity };
-  saveDB();
+    DB.profile = { nickname, gender, age, height, weight, goal, activity };
+    saveDB();
 
-  document.getElementById('onboarding').classList.add('hidden');
-  refreshUI();
-  toast('✅ 个人档案已保存！', 'success');
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('onboarding').style.display = 'none';
+    
+    refreshUI();
+    toast('✅ 个人档案已保存！', 'success');
+  } catch(e) {
+    console.error('saveProfile error:', e);
+    alert('保存失败: ' + e.message);
+  }
 }
 
 // ==================== Navigation ====================
@@ -968,7 +975,8 @@ function quickAddFood(name, calories, protein, carbs, fat) {
 
 // ==================== UI Rendering ====================
 function refreshUI() {
-  if (!DB.profile) return;
+  try {
+  if (!DB.profile) { console.warn('refreshUI: no profile'); return; }
   const p = calcProfile(DB.profile);
   const today = getDateStr();
   const todayRecords = DB.records.filter(r => r.date === today);
@@ -1016,6 +1024,7 @@ function refreshUI() {
 
   // Header date
   document.getElementById('header-date').textContent = new Date().toLocaleDateString('zh-CN', {month:'long',day:'numeric',weekday:'long'});
+  } catch(e) { console.error('refreshUI error:', e); alert('refreshUI出错: ' + e.message); }
 }
 
 function drawRing(pct) {

@@ -536,6 +536,36 @@ function escapeHTML(str){
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
+// ===== ANTI-CHEAT: per-account HMAC checksum =====
+(function(){
+  var SECRET = 'D13tM@t3_D13tApp_S3cr3t!';
+  window._ac = {
+    checksum: function(acct) {
+      // Checksum profile fields + records count (NOT password)
+      var p = acct.profile || {};
+      var data = [
+        p.gender||'', p.age||0, p.height||0, p.weight||0,
+        p.goal||'', p.activity||'', p.nickname||'',
+        (acct.records||[]).length
+      ].join('|');
+      var h = 0;
+      for (var i=0; i<data.length; i++)
+        h = ((h<<5) - h + data.charCodeAt(i)) | 0;
+      for (var i=0; i<SECRET.length; i++)
+        h = ((h<<5) - h + SECRET.charCodeAt(i)) | 0;
+      return h.toString(36);
+    },
+    verify: function(acct) {
+      var saved = acct._chk;
+      if (!saved) return true; // no checksum yet = legacy account, allow
+      return this.checksum(acct) === saved;
+    }
+  };
+})();
+
+// ===== HELPER: current user storage key =====
+function _uKey() { return 'dietmate_acct_' + (CUR_USER || ''); }
+
 function calc(p){
   var h=p.height/100,bmi=p.weight/(h*h);
   var gc=p.gender==='male'?5:-161;
@@ -560,7 +590,11 @@ function getAccts(){
   try{return JSON.parse(localStorage.getItem('dietmate_accounts')||'{}');}
   catch(e){return {};}
 }
-function saveAccts(a){localStorage.setItem('dietmate_accounts',JSON.stringify(a));}
+function saveAccts(a){
+  // Add checksum to each account
+  for (var k in a) { if (a[k] && a[k].profile) { a[k]._chk = _ac.checksum(a[k]); } }
+  localStorage.setItem('dietmate_accounts',JSON.stringify(a));
+}
 
 function authSubmit(){
   var user=$id('inp-user').value.trim();
@@ -582,8 +616,10 @@ function authSubmit(){
     accts[user]={
       password:pass,
       profile:{gender:'male',age:25,height:170,weight:65,goal:'maintain',activity:'1.55',nickname:user},
-      records:[]
+      records:[],
+      _chk:''
     };
+    accts[user]._chk = _ac.checksum(accts[user]);
     saveAccts(accts);
     CUR_USER=user;
     CUR_ACCT=accts[user];
@@ -601,6 +637,13 @@ function authSubmit(){
     CUR_USER=user;
     CUR_ACCT=accts[user];
     localStorage.setItem('dietmate_last_user',user);
+    // Anti-cheat: verify account integrity
+    if (!_ac.verify(accts[user])) {
+      toast('检测到异常数据，已重置饮食记录', 'e');
+      accts[user].records = [];
+      accts[user]._chk = _ac.checksum(accts[user]);
+      saveAccts(accts);
+    }
     showApp();
   }
 }
@@ -705,6 +748,8 @@ function saveProfileEdit(){
   if(age<10||age>100||height<100||height>250||weight<30||weight>200){
     toast('身高体重数据不合理','e');return;
   }
+  // Bounds checks to prevent cheating
+  if (isNaN(age)||isNaN(height)||isNaN(weight)) { toast('请填写有效数字','e'); return; }
 
   CUR_ACCT.profile={nickname:nick,gender:gender,age:age,height:height,weight:weight,goal:goal,activity:activity};
   var accts=getAccts();accts[CUR_USER]=CUR_ACCT;saveAccts(accts);

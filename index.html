@@ -866,7 +866,8 @@ function doSearch(q){
   }
   $hide(fl);
   $html(sr,res.map(function(f){
-    return '<div class="chip" onclick="quickAddFood(\''+f.n.replace(/'/g,'\\'')+'\','+f.c+','+f.p+','+f.cb+','+f.f+')">'+
+    return '<div class="chip" onclick="addFoodByAttr(this)" data-n="'+f.n+'" data-c="'+f.c+'" data-p="'+f.p+'" data-cb="'+f.cb+'" data-f="'+f.f+'">'+
+      escapeHTML(f.n)+' <small style="opacity:.7">'+f.c+'kcal</small></div>';
       escapeHTML(f.n)+' <small style="opacity:.7">'+f.c+'kcal</small></div>';
   }).join(''));
 }
@@ -890,7 +891,9 @@ function filterCat(cat,btn){
   $show(fl);
   $html($id('sr'),'');
   $html(fl,res.map(function(f){
-    return '<div class="food-item" onclick="quickAddFood(\''+f.n.replace(/'/g,'\\'')+'\','+f.c+','+f.p+','+f.cb+','+f.f+')">'+
+    return '<div class="food-item" onclick="addFoodByAttr(this)" data-n="'+f.n+'" data-c="'+f.c+'" data-p="'+f.p+'" data-cb="'+f.cb+'" data-f="'+f.f+'">'+
+      '<div><div class="name">'+escapeHTML(f.n)+'</div><div class="cal">'+f.c+' kcal/100g</div></div>'+
+      '<button class="add-btn">+ 添加</button></div>';
       '<div><div class="name">'+escapeHTML(f.n)+'</div><div class="cal">'+f.c+' kcal/100g</div></div>'+
       '<button class="add-btn">+ 添加</button></div>';
   }).join(''));
